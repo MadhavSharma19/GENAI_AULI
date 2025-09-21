@@ -1,0 +1,306 @@
+<!--
+Project: Auli Chatbot — Intro + Main Chat
+Files included in this single document (save each part to its own file):
+  1) intro.html   -> the landing/intro page with space for an animated AI/GIF
+  2) chat.html    -> the main chatbot UI (Tailwind) — reads answers.txt
+  3) answers.txt  -> example Q|A pairs (place in same folder)
+
+Instructions:
+ - Save each file into the same folder. Create a folder named `assets/` and put your animated GIF there (example: assets/ai.gif).
+ - To test locally, run a simple local server from that folder (browsers block fetch() for local files otherwise):
+     - Python: `python -m http.server 8000` (then open http://localhost:8000/intro.html)
+     - Node (http-server): `npx http-server` or `npx serve`
+ - Speech recognition uses the Web Speech API (works best in Chrome/Edge).
+ - Replace the placeholder GIF at assets/ai.gif with your chosen animation.
+-->
+
+
+
+
+<!-- ========================= chat.html ========================= -->
+<!-- Save the following block as: chat.html -->
+<!doctype html>
+<html lang="en">
+<head>
+
+
+
+
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" type="image" href="headlogo.png">
+  <title>Auli — Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: cadetblue;}
+    .bubble-user { border-bottom-right-radius: 6px; }
+    .bubble-bot { border-bottom-left-radius: 6px; }
+    .fadeIn { animation: fadeIn .35s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px) scale(.995);} to { opacity:1; transform: translateY(0) scale(1);} }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+
+      <!-- Sidebar -->
+      <aside class="md:col-span-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur rounded-2xl p-4 border dark:border-gray-700">
+        <div class="flex items-center gap-3 mb-4">
+          <img src="assets/ai-small.gif" onerror="this.style.display='none'" alt="ai" class="w-12 h-12 rounded-full shadow-sm"> 
+          <div>
+            <div class="font-bold text-lg"><img src="Screenshot_2025-09-21_130120-removebg-preview.png" alt=""></div>
+            <div class="text-sm opacity-70"><img src="Screenshot_2025-09-21_130214-removebg-preview.png" alt=""></div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <button class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/20 transition">💬 Chat</button>
+          <button class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/20 transition">📈 Mood tracker</button>
+          <button class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/20 transition">⚙️ Settings</button>
+          <button class="w-full text-left px-3 py-2 rounded-xl hover:bg-white/20 transition" onclick="location.href='intro.html'">⤴️ Back to Intro</button>
+        </div>
+
+        <div class="mt-6 border-t pt-4 text-sm opacity-80">
+          <div class="flex items-center justify-between">
+            <div>Theme</div>
+            <div>
+              <button id="themeToggle" class="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full text-xs">Dark</button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Chat area -->
+      <main class="md:col-span-9 bg-white dark:bg-gray-900 rounded-2xl shadow p-4 flex flex-col" style="min-height:560px;">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <img src="assets/ai-small.gif" onerror="this.style.display='none'" class="w-10 h-10 rounded-full"> 
+            <div>
+              <div class="font-bold">Auli</div>
+              <div class="text-xs opacity-70">Support & listening • not a replacement for professionals</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button id="micBtn" class="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 border">🎤 Start</button>
+            <button id="attachImgBtn" class="px-4 py-2 rounded-xl bg-green-50 hover:bg-green-100 text-green-600 border">🖼️ Image</button>
+            <button id="attachFileBtn" class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 border">📁 File</button>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 p-3 rounded-xl bg-gradient-to-b from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+          <!-- messages injected here -->
+        </div>
+
+        <!-- Quick moods -->
+        <div class="mt-3 mb-2 flex gap-3 items-center">
+          <div class="text-sm opacity-80">How are you feeling?</div>
+          <div class="flex gap-2 ml-2">
+            <button class="btn-mood px-3 py-1 rounded-lg bg-white/60 shadow" data-msg="i feel happy">😊 Happy</button>
+            <button class="btn-mood px-3 py-1 rounded-lg bg-white/60 shadow" data-msg="i feel sad">😔 Sad</button>
+            <button class="btn-mood px-3 py-1 rounded-lg bg-white/60 shadow" data-msg="i feel anxious">😰 Anxious</button>
+            <button class="btn-mood px-3 py-1 rounded-lg bg-white/60 shadow" data-msg="i feel lonely">💬 Lonely</button>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="mt-3 border-t pt-3">
+          <div class="flex items-center gap-3">
+            <input id="userInput" type="text" placeholder="Type a message or choose a mood..." class="flex-1 px-4 py-3 rounded-full border focus:ring-2 focus:ring-indigo-400" />
+            <button id="sendBtn" class="px-5 py-3 rounded-full bg-indigo-600 text-white font-semibold shadow">Send</button>
+          </div>
+          <div id="filePreview" class="mt-2 text-sm text-gray-600"></div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="fileInput" class="hidden">
+  <input type="file" id="imgInput" accept="image/*" class="hidden">
+
+  <script>
+    // Basic setup
+    const chatBox = document.getElementById('chatBox');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const micBtn = document.getElementById('micBtn');
+    const attachFileBtn = document.getElementById('attachFileBtn');
+    const attachImgBtn = document.getElementById('attachImgBtn');
+    const fileInput = document.getElementById('fileInput');
+    const imgInput = document.getElementById('imgInput');
+    const filePreview = document.getElementById('filePreview');
+    const themeToggle = document.getElementById('themeToggle');
+
+    let qa = {};
+    let recognition = null;
+    let listening = false;
+
+    // Load Q&A from answers.txt
+    fetch('answers.txt')
+      .then(r => r.text())
+      .then(txt => {
+        txt.split('\n').forEach(line => {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) return;
+          const parts = trimmed.split('|');
+          if (parts.length >= 2) {
+            const q = parts.shift().trim().toLowerCase();
+            const a = parts.join('|').trim();
+            if (q) qa[q] = a;
+          }
+        });
+      })
+      .catch(() => {
+        // show small note in chat if not loaded
+        addBotMessage('⚠️ Could not load answers.txt. For full functionality, run via a local server and keep answers.txt in the same folder.');
+      });
+
+    function addUserMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'self-end max-w-[70%] ml-auto fadeIn';
+      div.innerHTML = `<div class="inline-block bg-indigo-600 text-white px-4 py-2 rounded-2xl bubble-user shadow">${escapeHtml(text)}</div><div class="text-xs mt-1 opacity-60 text-right pr-1">You</div>`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addBotMessage(text) {
+      const div = document.createElement('div');
+      div.className = 'self-start max-w-[70%] mr-auto fadeIn';
+      div.innerHTML = `<div class="inline-block bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-4 py-2 rounded-2xl bubble-bot shadow">${escapeHtml(text)}</div><div class="text-xs mt-1 opacity-60">Auli</div>`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function botReplyFor(msg) {
+      const key = msg.trim().toLowerCase();
+      return qa[key] || "Sorry, I don't understand that yet. Try another way of asking or add the Q|A to answers.txt.";
+    }
+
+    function showTypingThenReply(userMsg) {
+      const typing = document.createElement('div');
+      typing.className = 'self-start opacity-80';
+      typing.innerHTML = `<div class="inline-block px-4 py-2 rounded-2xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-100">Auli is typing...</div>`;
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+      setTimeout(() => {
+        typing.remove();
+        addBotMessage(botReplyFor(userMsg));
+      }, 700 + Math.min(userMsg.length*10, 900));
+    }
+
+    // Send message
+    function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+      addUserMessage(text);
+      userInput.value = '';
+      showTypingThenReply(text);
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+    // Quick moods
+    document.querySelectorAll('.btn-mood').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const msg = btn.dataset.msg;
+        userInput.value = msg;
+        sendMessage();
+      });
+    });
+
+    // File attachments
+    attachFileBtn.addEventListener('click', () => fileInput.click());
+    attachImgBtn.addEventListener('click', () => imgInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      filePreview.innerHTML = `📄 <strong>${f.name}</strong> — (${Math.round(f.size/1024)} KB)`;
+      addUserMessage(`📄 File uploaded: ${f.name}`);
+    });
+
+    imgInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const container = document.createElement('div');
+        container.className = 'self-end ml-auto fadeIn';
+        container.innerHTML = `<img src="${ev.target.result}" class="rounded-lg max-w-[240px] shadow">`;
+        chatBox.appendChild(container);
+        addUserMessage('(sent an image)');
+        chatBox.scrollTop = chatBox.scrollHeight;
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Mic: Web Speech API (toggle)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    if (SpeechRecognition === null) {
+      micBtn.disabled = true;
+      micBtn.textContent = '🎤 Not supported';
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (e) => {
+        const spoken = e.results[0][0].transcript;
+        userInput.value = spoken;
+        sendMessage();
+      };
+
+      recognition.onerror = (e) => {
+        console.error('Speech error', e);
+        recognition.stop();
+        listening = false;
+        micBtn.textContent = '🎤 Start';
+        micBtn.classList.remove('bg-red-600','text-white');
+      };
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (!recognition) return;
+      if (!listening) {
+        recognition.start();
+        listening = true;
+        micBtn.textContent = '🔴 Listening...';
+        micBtn.classList.add('bg-red-600','text-white');
+      } else {
+        recognition.stop();
+        listening = false;
+        micBtn.textContent = '🎤 Start';
+        micBtn.classList.remove('bg-red-600','text-white');
+      }
+    });
+
+    // Theme toggle
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      themeToggle.textContent = document.documentElement.classList.contains('dark') ? 'Light' : 'Dark';
+    });
+
+    // Small welcome message
+    addBotMessage('Hi, I\'m Auli — I can listen and offer gentle tips. Type something or choose a mood shortcut.');
+  </script>
+</body>
+</html>
+
