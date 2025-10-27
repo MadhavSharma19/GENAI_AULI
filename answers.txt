@@ -6,7 +6,10 @@ how are you|I don’t have feelings like humans, but I’m here and ready to lis
 good morning|Good morning! 🌞 Wishing you peace and positivity today.
 good night|Good night 🌙 May your sleep be restful and your dreams be kind.
 hi|Hello! It’s nice to see you here. How’s your day going?
+
 I feel sad.|I’m sorry you’re feeling sad. 😔 Sometimes talking about it helps. Do you want to share what’s on your mind?
+I feel sad|I’m sorry you’re feeling sad. 😔 Sometimes talking about it helps. Do you want to share what’s on your mind?
+i feel sad|I’m sorry you’re feeling sad. 😔 Sometimes talking about it helps. Do you want to share what’s on your mind?
 i feel happy|That’s wonderful! 🌸 What’s making you feel happy right now?
 i feel anxious|Feeling anxious is tough. Try taking a few deep breaths with me: inhale… hold… exhale… 🌿
 i feel stressed|Stress can be heavy. Would you like me to suggest some relaxation techniques?
@@ -100,3 +103,4 @@ Yes.|Ok! if that's the case you should learn from him. And move on 😊
 But I want to mock him so he feels that what I'm feeling right now.|I think if you will do that you will be distracted from your path I want to see you in a way that the world remeber you not like that.❤️‍🔥❤️‍🔥
 Yes, you are right.|Great!Work hard and talk to me when needed i think you should listen  some music and walk.😊
 OK, bye.|Take care dear❤️.
+
